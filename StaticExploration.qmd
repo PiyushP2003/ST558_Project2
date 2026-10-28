@@ -29,3 +29,102 @@ dim(nba)
 names(nba)
 glimpse(nba)
 ```
+
+## Categorical Variable Summaries
+
+### One-Way Contingency Table
+
+The following table displays the number of player-game observations for each NBA team.
+
+```{r}
+team_table <- nba |>
+  count(team) |>
+  arrange(desc(n))
+
+team_table
+```
+
+### Two-Way Contingency Table
+
+The following table displays the number of player-game observations for each team separated by whether the game was played at home or away.
+
+```{r}
+team_location_table <- nba |>
+  count(team, location) |>
+  pivot_wider(
+    names_from = location,
+    values_from = n,
+    values_fill = 0
+  )
+
+team_location_table
+```
+
+## Numerical Summaries
+
+The following table summarizes player performance for each NBA team. The mean points, median points, mean rebounds, mean assists, average minutes, and standard deviation of points are calculated across player-game observations.
+
+```{r}
+team_summary <- nba |>
+  group_by(team) |>
+  summarize(
+    mean_pts = mean(pts, na.rm = TRUE),
+    median_pts = median(pts, na.rm = TRUE),
+    sd_pts = sd(pts, na.rm = TRUE),
+    mean_reb = mean(reb, na.rm = TRUE),
+    mean_ast = mean(ast, na.rm = TRUE),
+    mean_minutes = mean(minutes, na.rm = TRUE)
+  ) |>
+  arrange(desc(mean_pts))
+
+team_summary
+```
+
+## Graphical Summaries
+
+### Average Points By team
+
+This bar chart compares the average number of points scored per player-game observation across NBA teams.
+
+```{r}
+ggplot(team_summary, aes(x = reorder(team, mean_pts), y = mean_pts)) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Average Player Points per Game by NBA Team",
+    x = "Team",
+    y = "Average Points"
+  ) +
+  theme_minimal()
+```
+
+### Distribution of Points Scored
+
+This histogram displays the distribution of points scored by players in individual games.
+
+```{r}
+ggplot(nba, aes(x = pts)) +
+  geom_histogram(binwidth = 2, color = "white") +
+  labs(
+    title = "Distribution of Points Scored per Player-Game",
+    x = "Points",
+    y = "Frequency"
+  ) +
+  theme_minimal()
+```
+
+### Points Scored By Game Location
+
+This box plot compares the distribution of points scored by players in home and away games.
+
+```{r}
+ggplot(nba, aes(x = location, y = pts, fill = location)) +
+  geom_boxplot() +
+  labs(
+    title = "Distribution of Player Points in Home and Away Games",
+    x = "Game Location",
+    y = "Points",
+    fill = "Location"
+  ) +
+  theme_minimal()
+```
