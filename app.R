@@ -199,8 +199,12 @@ ui <- fluidPage(
           h3("Explore the Data"),
           
           p(
-            "Interactive summaries and visualizations will be displayed here."
-          )
+            "The summaries below are based on the filtered data."
+          ),
+          
+          h4("Numerical Summary"),
+          
+          DT::dataTableOutput("numerical_summary")
         )
       )
     )
@@ -314,6 +318,51 @@ server <- function(input, output, session) {
       )
     }
   )
+  
+  
+  # Numerical summary
+  output$numerical_summary <- DT::renderDataTable({
+    
+    data <- filtered_data()
+    
+    var1 <- data[[input$numeric_var1]]
+    var2 <- data[[input$numeric_var2]]
+    
+    summary_table <- tibble(
+      Variable = c(input$numeric_var1, input$numeric_var2),
+      Mean = c(
+        mean(var1, na.rm = TRUE),
+        mean(var2, na.rm = TRUE)
+      ),
+      Median = c(
+        median(var1, na.rm = TRUE),
+        median(var2, na.rm = TRUE)
+      ),
+      SD = c(
+        sd(var1, na.rm = TRUE),
+        sd(var2, na.rm = TRUE)
+      ),
+      Min = c(
+        min(var1, na.rm = TRUE),
+        min(var2, na.rm = TRUE)
+      ),
+      Max = c(
+        max(var1, na.rm = TRUE),
+        max(var2, na.rm = TRUE)
+      )
+    ) |>
+      mutate(
+        across(
+          where(is.numeric),
+          ~ round(.x, 2)
+        )
+      )
+    
+    summary_table
+    
+  }, options = list(
+    dom = "t"
+  ), rownames = FALSE)
 }
 
 
