@@ -128,3 +128,62 @@ ggplot(nba, aes(x = location, y = pts, fill = location)) +
   ) +
   theme_minimal()
 ```
+
+### Minutes Played and Points Scored
+
+This scatter plot examines the relationship between minutes played and points scored, with points colored by whether the game was played at home or away.
+
+```{r}
+ggplot(nba, aes(x = minutes, y = pts, color = location)) +
+  geom_point(alpha = 0.4) +
+  labs(
+    title = "Relationship Between Minutes Played and Points Scored",
+    x = "Minutes Played",
+    y = "Points",
+    color = "Location"
+  ) +
+  theme_minimal()
+```
+
+### Distribution of Points by Game Location
+
+The distribution of player points is compared between home and away games using separate facets.
+
+```{r}
+ggplot(nba, aes(x = pts)) +
+  geom_histogram(binwidth = 2, color = "white") +
+  facet_wrap(~ location) +
+  labs(
+    title = "Distribution of Player Points by Game Location",
+    x = "Points",
+    y = "Frequency"
+  ) +
+  theme_minimal()
+```
+
+### Average Points by Team and Opponent Heatmap
+
+This heatmap displays the average number of points scored per player-game for each team against each opponent. This provides a way to visualize scoring patterns across team matchups.
+
+```{r}
+team_opponent_summary <- nba |>
+  group_by(team, opponent) |>
+  summarize(
+    mean_pts = mean(pts, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+ggplot(team_opponent_summary,
+       aes(x = opponent, y = team, fill = mean_pts)) +
+  geom_tile() +
+  labs(
+    title = "Average Player Points by Team and Opponent",
+    x = "Opponent",
+    y = "Team",
+    fill = "Avg. Points"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+```
