@@ -199,7 +199,7 @@ ui <- fluidPage(
           h3("Explore the Data"),
           
           p(
-            "The summaries below are based on the filtered data."
+            "The summaries and visualizations below are based on the filtered data."
           ),
           
           h4("Numerical Summary"),
@@ -220,7 +220,35 @@ ui <- fluidPage(
           
           p("Number of player-game observations by team and game location."),
           
-          DT::dataTableOutput("two_way_table")
+          DT::dataTableOutput("two_way_table"),
+          
+          br(),
+          hr(),
+          
+          h3("Graphical Summaries"),
+          
+          h4("Distribution of Numeric Variable 1"),
+          plotOutput("histogram_plot"),
+          
+          br(),
+          
+          h4("Numeric Variable 1 by Game Location"),
+          plotOutput("boxplot_plot"),
+          
+          br(),
+          
+          h4("Relationship Between Numeric Variables"),
+          plotOutput("scatter_plot"),
+          
+          br(),
+          
+          h4("Distribution by Game Location"),
+          plotOutput("facet_plot"),
+          
+          br(),
+          
+          h4("Average Numeric Variable 1 by Team"),
+          plotOutput("team_plot")
         )
       )
     )
@@ -407,6 +435,152 @@ server <- function(input, output, session) {
   }, options = list(
     pageLength = 10
   ), rownames = FALSE)
+  
+  
+  # Histogram
+  output$histogram_plot <- renderPlot({
+    
+    data <- filtered_data()
+    
+    ggplot(
+      data,
+      aes(x = .data[[input$numeric_var1]])
+    ) +
+      geom_histogram(
+        bins = 30,
+        color = "white"
+      ) +
+      labs(
+        title = paste(
+          "Distribution of",
+          input$numeric_var1
+        ),
+        x = input$numeric_var1,
+        y = "Frequency"
+      ) +
+      theme_minimal()
+  })
+  
+  
+  # Boxplot
+  output$boxplot_plot <- renderPlot({
+    
+    data <- filtered_data()
+    
+    ggplot(
+      data,
+      aes(
+        x = location,
+        y = .data[[input$numeric_var1]],
+        fill = location
+      )
+    ) +
+      geom_boxplot() +
+      labs(
+        title = paste(
+          input$numeric_var1,
+          "by Game Location"
+        ),
+        x = "Game Location",
+        y = input$numeric_var1,
+        fill = "Location"
+      ) +
+      theme_minimal()
+  })
+  
+  
+  # Scatterplot
+  output$scatter_plot <- renderPlot({
+    
+    data <- filtered_data()
+    
+    ggplot(
+      data,
+      aes(
+        x = .data[[input$numeric_var1]],
+        y = .data[[input$numeric_var2]],
+        color = location
+      )
+    ) +
+      geom_point(alpha = 0.5) +
+      labs(
+        title = paste(
+          input$numeric_var1,
+          "vs",
+          input$numeric_var2
+        ),
+        x = input$numeric_var1,
+        y = input$numeric_var2,
+        color = "Location"
+      ) +
+      theme_minimal()
+  })
+  
+  
+  # Faceted histogram
+  output$facet_plot <- renderPlot({
+    
+    data <- filtered_data()
+    
+    ggplot(
+      data,
+      aes(x = .data[[input$numeric_var1]])
+    ) +
+      geom_histogram(
+        bins = 30,
+        color = "white"
+      ) +
+      facet_wrap(~ location) +
+      labs(
+        title = paste(
+          "Distribution of",
+          input$numeric_var1,
+          "by Game Location"
+        ),
+        x = input$numeric_var1,
+        y = "Frequency"
+      ) +
+      theme_minimal()
+  })
+  
+  
+  # Team average plot
+  output$team_plot <- renderPlot({
+    
+    data <- filtered_data() |>
+      group_by(team) |>
+      summarize(
+        average = mean(
+          .data[[input$numeric_var1]],
+          na.rm = TRUE
+        ),
+        .groups = "drop"
+      ) |>
+      arrange(average)
+    
+    ggplot(
+      data,
+      aes(
+        x = reorder(team, average),
+        y = average
+      )
+    ) +
+      geom_col() +
+      coord_flip() +
+      labs(
+        title = paste(
+          "Average",
+          input$numeric_var1,
+          "by Team"
+        ),
+        x = "Team",
+        y = paste(
+          "Average",
+          input$numeric_var1
+        )
+      ) +
+      theme_minimal()
+  })
 }
 
 
