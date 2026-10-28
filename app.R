@@ -204,7 +204,23 @@ ui <- fluidPage(
           
           h4("Numerical Summary"),
           
-          DT::dataTableOutput("numerical_summary")
+          DT::dataTableOutput("numerical_summary"),
+          
+          br(),
+          
+          h4("One-Way Contingency Table"),
+          
+          p("Number of player-game observations by team."),
+          
+          DT::dataTableOutput("one_way_table"),
+          
+          br(),
+          
+          h4("Two-Way Contingency Table"),
+          
+          p("Number of player-game observations by team and game location."),
+          
+          DT::dataTableOutput("two_way_table")
         )
       )
     )
@@ -362,6 +378,34 @@ server <- function(input, output, session) {
     
   }, options = list(
     dom = "t"
+  ), rownames = FALSE)
+  
+  
+  # One-way contingency table
+  output$one_way_table <- DT::renderDataTable({
+    
+    filtered_data() |>
+      count(team, name = "Count") |>
+      arrange(desc(Count))
+    
+  }, options = list(
+    pageLength = 10
+  ), rownames = FALSE)
+  
+  
+  # Two-way contingency table
+  output$two_way_table <- DT::renderDataTable({
+    
+    filtered_data() |>
+      count(team, location) |>
+      pivot_wider(
+        names_from = location,
+        values_from = n,
+        values_fill = 0
+      )
+    
+  }, options = list(
+    pageLength = 10
   ), rownames = FALSE)
 }
 
