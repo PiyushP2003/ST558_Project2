@@ -3,7 +3,6 @@ library(tidyverse)
 library(arrow)
 library(DT)
 
-# Load data
 nba <- read_parquet("data/nba_2025_26.parquet")
 
 # Create a more readable game location variable
@@ -22,11 +21,81 @@ ui <- fluidPage(
     
     # Sidebar
     sidebarPanel(
+      
       h4("Filter Data"),
+      
       p(
-        "Use the options below to filter the NBA data."
+        "Select the desired filters and click Apply Filters to update the data."
+      ),
+      
+      # Categorical filter 1
+      selectInput(
+        "team_filter",
+        "Team:",
+        choices = c("All", sort(unique(nba$team))),
+        selected = "All"
+      ),
+      
+      # Categorical filter 2
+      radioButtons(
+        "location_filter",
+        "Game Location:",
+        choices = c("All", "Home", "Away"),
+        selected = "All"
+      ),
+      
+      hr(),
+      
+      # Numeric variable 1
+      selectInput(
+        "numeric_var1",
+        "Numeric Variable 1:",
+        choices = c(
+          "Points" = "pts",
+          "Rebounds" = "reb",
+          "Assists" = "ast",
+          "Minutes" = "minutes",
+          "Steals" = "stl",
+          "Blocks" = "blk",
+          "Turnovers" = "tov",
+          "Plus/Minus" = "plus_minus"
+        ),
+        selected = "pts"
+      ),
+      
+      # Dynamic slider for numeric variable 1
+      uiOutput("numeric_slider1"),
+      
+      # Numeric variable 2
+      selectInput(
+        "numeric_var2",
+        "Numeric Variable 2:",
+        choices = c(
+          "Points" = "pts",
+          "Rebounds" = "reb",
+          "Assists" = "ast",
+          "Minutes" = "minutes",
+          "Steals" = "stl",
+          "Blocks" = "blk",
+          "Turnovers" = "tov",
+          "Plus/Minus" = "plus_minus"
+        ),
+        selected = "ast"
+      ),
+      
+      # Dynamic slider for numeric variable 2
+      uiOutput("numeric_slider2"),
+      
+      br(),
+      
+      # Apply filters button
+      actionButton(
+        "apply_filters",
+        "Apply Filters",
+        class = "btn-primary"
       )
     ),
+    
     
     # Main Panel
     mainPanel(
@@ -72,9 +141,10 @@ ui <- fluidPage(
           h4("Using the App"),
           
           p(
-            "Use the sidebar to filter the dataset by categorical and numeric
-            variables. After choosing the desired filters, press the Apply
-            Filters button to update the data used throughout the application."
+            "Use the sidebar to filter the dataset by team, game location,
+            and two selected numeric variables. After choosing the desired
+            filters, press the Apply Filters button to update the data used
+            throughout the application."
           ),
           
           tags$ul(
@@ -135,6 +205,90 @@ ui <- fluidPage(
 
 # Server
 server <- function(input, output, session) {
+  
+  output$numeric_slider1 <- renderUI({
+    
+    req(input$numeric_var1)
+    
+    variable <- nba[[input$numeric_var1]]
+    
+    sliderInput(
+      "numeric_range1",
+      "Select Range:",
+      min = min(variable, na.rm = TRUE),
+      max = max(variable, na.rm = TRUE),
+      value = c(
+        min(variable, na.rm = TRUE),
+        max(variable, na.rm = TRUE)
+      )
+    )
+  })
+  
+  
+  output$numeric_slider2 <- renderUI({
+    
+    req(input$numeric_var2)
+    
+    variable <- nba[[input$numeric_var2]]
+    
+    sliderInput(
+      "numeric_range2",
+      "Select Range:",
+      min = min(variable, na.rm = TRUE),
+      max = max(variable, na.rm = TRUE),
+      value = c(
+        min(variable, na.rm = TRUE),
+        max(variable, na.rm = TRUE)
+      )
+    )
+  })
+  
+  
+  filtered_data <- eventReactive(input$apply_filters, {
+    
+    req(
+      input$numeric_range1,
+      input$numeric_range2
+    )
+    
+    data <- nba
+    
+    
+    # Filter by team
+    if (input$team_filter != "All") {
+      
+      data <- data |>
+        filter(team == input$team_filter)
+    }
+    
+    
+    # Filter by game location
+    if (input$location_filter != "All") {
+      
+      data <- data |>
+        filter(location == input$location_filter)
+    }
+    
+    
+    # Filter by first numeric variable
+    data <- data |>
+      filter(
+        .data[[input$numeric_var1]] >= input$numeric_range1[1],
+        .data[[input$numeric_var1]] <= input$numeric_range1[2]
+      )
+    
+    
+    # Filter by second numeric variable
+    data <- data |>
+      filter(
+        .data[[input$numeric_var2]] >= input$numeric_range2[1],
+        .data[[input$numeric_var2]] <= input$numeric_range2[2]
+      )
+    
+    
+    data
+    
+  }, ignoreNULL = FALSE)
   
 }
 
