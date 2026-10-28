@@ -1,0 +1,31 @@
+---
+title: "Static Exploration"
+format: html
+editor: visual
+---
+
+## Introduction
+
+This document explores NBA player game log data from the 2025-26 NBA season. The purpose of this exploration is to investigate player performance and identify useful numerical and graphical summaries that will later be incorporated into an interactive Shiny application.
+
+## Setup
+
+```{r}
+library(tidyverse)
+library(arrow)
+
+nba <- read_parquet("data/nba_2025_26.parquet")
+
+nba <- nba |>
+  mutate(
+    location = if_else(home, "Home", "Away")
+  )
+```
+
+## Data Overview
+
+```{r}
+dim(nba)
+names(nba)
+glimpse(nba)
+```
