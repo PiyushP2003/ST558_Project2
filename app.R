@@ -3,9 +3,10 @@ library(tidyverse)
 library(arrow)
 library(DT)
 
+
+# Load and prepare data
 nba <- read_parquet("data/nba_2025_26.parquet")
 
-# Create a more readable game location variable
 nba <- nba |>
   mutate(
     location = if_else(home, "Home", "Away")
@@ -28,7 +29,6 @@ ui <- fluidPage(
         "Select the desired filters and click Apply Filters to update the data."
       ),
       
-      # Categorical filter 1
       selectInput(
         "team_filter",
         "Team:",
@@ -36,7 +36,6 @@ ui <- fluidPage(
         selected = "All"
       ),
       
-      # Categorical filter 2
       radioButtons(
         "location_filter",
         "Game Location:",
@@ -46,7 +45,6 @@ ui <- fluidPage(
       
       hr(),
       
-      # Numeric variable 1
       selectInput(
         "numeric_var1",
         "Numeric Variable 1:",
@@ -63,10 +61,8 @@ ui <- fluidPage(
         selected = "pts"
       ),
       
-      # Dynamic slider for numeric variable 1
       uiOutput("numeric_slider1"),
       
-      # Numeric variable 2
       selectInput(
         "numeric_var2",
         "Numeric Variable 2:",
@@ -83,12 +79,10 @@ ui <- fluidPage(
         selected = "ast"
       ),
       
-      # Dynamic slider for numeric variable 2
       uiOutput("numeric_slider2"),
       
       br(),
       
-      # Apply filters button
       actionButton(
         "apply_filters",
         "Apply Filters",
@@ -182,8 +176,19 @@ ui <- fluidPage(
           h3("View and Download Data"),
           
           p(
-            "The filtered NBA data will be displayed here."
-          )
+            "The table below displays the data based on the filters selected
+            in the sidebar."
+          ),
+          
+          downloadButton(
+            "download_data",
+            "Download Filtered Data"
+          ),
+          
+          br(),
+          br(),
+          
+          DT::dataTableOutput("data_table")
         ),
         
         
@@ -206,6 +211,7 @@ ui <- fluidPage(
 # Server
 server <- function(input, output, session) {
   
+  # Dynamic numeric sliders
   output$numeric_slider1 <- renderUI({
     
     req(input$numeric_var1)
@@ -244,6 +250,7 @@ server <- function(input, output, session) {
   })
   
   
+  # Filter data when Apply Filters is pressed
   filtered_data <- eventReactive(input$apply_filters, {
     
     req(
@@ -253,43 +260,60 @@ server <- function(input, output, session) {
     
     data <- nba
     
-    
-    # Filter by team
     if (input$team_filter != "All") {
-      
       data <- data |>
         filter(team == input$team_filter)
     }
     
-    
-    # Filter by game location
     if (input$location_filter != "All") {
-      
       data <- data |>
         filter(location == input$location_filter)
     }
     
-    
-    # Filter by first numeric variable
     data <- data |>
       filter(
         .data[[input$numeric_var1]] >= input$numeric_range1[1],
         .data[[input$numeric_var1]] <= input$numeric_range1[2]
       )
     
-    
-    # Filter by second numeric variable
     data <- data |>
       filter(
         .data[[input$numeric_var2]] >= input$numeric_range2[1],
         .data[[input$numeric_var2]] <= input$numeric_range2[2]
       )
     
-    
     data
     
   }, ignoreNULL = FALSE)
   
+  
+  # Data table
+  output$data_table <- DT::renderDataTable({
+    
+    filtered_data()
+    
+  }, options = list(
+    pageLength = 10,
+    scrollX = TRUE
+  ))
+  
+  
+  # Download filtered data
+  output$download_data <- downloadHandler(
+    
+    filename = function() {
+      "filtered_nba_data.csv"
+    },
+    
+    content = function(file) {
+      
+      write.csv(
+        filtered_data(),
+        file,
+        row.names = FALSE
+      )
+    }
+  )
 }
 
 
