@@ -1,7 +1,10 @@
 # ST 558 Project 2
 
-This repository contains an interactive R Shiny application for exploring NBA data.
+This project is an interactive Shiny application for exploring NBA player performance during the 2025-26 NBA season.
 
-The application allows users to filter NBA data based on selected characteristics and interactively explore numerical and graphical summaries of player performance.
+The application allows users to filter player-game data by team, game location, and selected numeric performance variables. Users can then explore the filtered data using numerical summaries, contingency tables, and graphical visualizations.
 
-The final application will be deployed using shinyapps.io.
+The app also includes a data download feature that allows users to download the filtered dataset as a CSV file.
+
+The data used in this project comes from the NBA Game Logs dataset available on Hugging Face:
+https://huggingface.co/datasets/cbratkovics/nba-game-logs

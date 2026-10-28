@@ -13,6 +13,47 @@ nba <- nba |>
   )
 
 
+numeric_choices <- c(
+  "Points" = "pts",
+  "Rebounds" = "reb",
+  "Assists" = "ast",
+  "Minutes" = "minutes",
+  "Field Goals Made" = "fgm",
+  "Field Goal Attempts" = "fga",
+  "Three-Pointers Made" = "fg3m",
+  "Three-Point Attempts" = "fg3a",
+  "Free Throws Made" = "ftm",
+  "Free Throw Attempts" = "fta",
+  "Offensive Rebounds" = "oreb",
+  "Defensive Rebounds" = "dreb",
+  "Steals" = "stl",
+  "Blocks" = "blk",
+  "Turnovers" = "tov",
+  "Personal Fouls" = "pf",
+  "Plus/Minus" = "plus_minus"
+)
+
+
+categorical_choices <- c(
+  "Team" = "team",
+  "Opponent" = "opponent",
+  "Game Location" = "location"
+)
+
+
+get_label <- function(variable) {
+  
+  all_choices <- c(
+    numeric_choices,
+    categorical_choices
+  )
+  
+  names(all_choices)[
+    match(variable, all_choices)
+  ]
+}
+
+
 # User Interface
 ui <- fluidPage(
   
@@ -48,16 +89,7 @@ ui <- fluidPage(
       selectInput(
         "numeric_var1",
         "Numeric Variable 1:",
-        choices = c(
-          "Points" = "pts",
-          "Rebounds" = "reb",
-          "Assists" = "ast",
-          "Minutes" = "minutes",
-          "Steals" = "stl",
-          "Blocks" = "blk",
-          "Turnovers" = "tov",
-          "Plus/Minus" = "plus_minus"
-        ),
+        choices = numeric_choices,
         selected = "pts"
       ),
       
@@ -66,16 +98,7 @@ ui <- fluidPage(
       selectInput(
         "numeric_var2",
         "Numeric Variable 2:",
-        choices = c(
-          "Points" = "pts",
-          "Rebounds" = "reb",
-          "Assists" = "ast",
-          "Minutes" = "minutes",
-          "Steals" = "stl",
-          "Blocks" = "blk",
-          "Turnovers" = "tov",
-          "Plus/Minus" = "plus_minus"
-        ),
+        choices = numeric_choices,
         selected = "ast"
       ),
       
@@ -135,10 +158,10 @@ ui <- fluidPage(
           h4("Using the App"),
           
           p(
-            "Use the sidebar to filter the dataset by team, game location,
-            and two selected numeric variables. After choosing the desired
-            filters, press the Apply Filters button to update the data used
-            throughout the application."
+            "Use the sidebar to subset the NBA data. The Data Download tab
+            displays and downloads the filtered observations. The Data
+            Exploration tab allows you to choose variables for numerical,
+            categorical, and graphical summaries."
           ),
           
           tags$ul(
@@ -154,7 +177,7 @@ ui <- fluidPage(
             
             tags$li(
               strong("Data Exploration: "),
-              "Provides interactive numerical summaries, contingency tables,
+              "Provides customizable numerical summaries, contingency tables,
               and graphical visualizations."
             )
           ),
@@ -199,56 +222,153 @@ ui <- fluidPage(
           h3("Explore the Data"),
           
           p(
-            "The summaries and visualizations below are based on the filtered data."
+            "Choose variables below to explore the currently filtered data."
           ),
           
-          h4("Numerical Summary"),
-          
-          DT::dataTableOutput("numerical_summary"),
-          
-          br(),
-          
-          h4("One-Way Contingency Table"),
-          
-          p("Number of player-game observations by team."),
-          
-          DT::dataTableOutput("one_way_table"),
-          
-          br(),
-          
-          h4("Two-Way Contingency Table"),
-          
-          p("Number of player-game observations by team and game location."),
-          
-          DT::dataTableOutput("two_way_table"),
-          
-          br(),
-          hr(),
-          
-          h3("Graphical Summaries"),
-          
-          h4("Distribution of Numeric Variable 1"),
-          plotOutput("histogram_plot"),
-          
-          br(),
-          
-          h4("Numeric Variable 1 by Game Location"),
-          plotOutput("boxplot_plot"),
-          
-          br(),
-          
-          h4("Relationship Between Numeric Variables"),
-          plotOutput("scatter_plot"),
-          
-          br(),
-          
-          h4("Distribution by Game Location"),
-          plotOutput("facet_plot"),
-          
-          br(),
-          
-          h4("Average Numeric Variable 1 by Team"),
-          plotOutput("team_plot")
+          tabsetPanel(
+            
+            # Numerical Summaries
+            tabPanel(
+              "Numerical Summaries",
+              
+              br(),
+              
+              selectInput(
+                "summary_numeric",
+                "Numeric Variable:",
+                choices = numeric_choices,
+                selected = "pts"
+              ),
+              
+              selectInput(
+                "summary_group",
+                "Summarize Across:",
+                choices = categorical_choices,
+                selected = "team"
+              ),
+              
+              h4("Summary Statistics"),
+              
+              DT::dataTableOutput("numerical_summary")
+            ),
+            
+            
+            # Categorical Summaries
+            tabPanel(
+              "Categorical Summaries",
+              
+              br(),
+              
+              selectInput(
+                "one_way_var",
+                "One-Way Table Variable:",
+                choices = categorical_choices,
+                selected = "team"
+              ),
+              
+              h4("One-Way Contingency Table"),
+              
+              DT::dataTableOutput("one_way_table"),
+              
+              br(),
+              
+              selectInput(
+                "two_way_var1",
+                "Two-Way Table Variable 1:",
+                choices = categorical_choices,
+                selected = "team"
+              ),
+              
+              selectInput(
+                "two_way_var2",
+                "Two-Way Table Variable 2:",
+                choices = categorical_choices,
+                selected = "location"
+              ),
+              
+              h4("Two-Way Contingency Table"),
+              
+              DT::dataTableOutput("two_way_table")
+            ),
+            
+            
+            # Graphical Summaries
+            tabPanel(
+              "Graphical Summaries",
+              
+              br(),
+              
+              selectInput(
+                "plot_numeric1",
+                "Primary Numeric Variable:",
+                choices = numeric_choices,
+                selected = "pts"
+              ),
+              
+              selectInput(
+                "plot_numeric2",
+                "Second Numeric Variable:",
+                choices = numeric_choices,
+                selected = "ast"
+              ),
+              
+              selectInput(
+                "plot_group",
+                "Color / Group Variable:",
+                choices = categorical_choices,
+                selected = "location"
+              ),
+              
+              selectInput(
+                "plot_facet",
+                "Facet Variable:",
+                choices = categorical_choices,
+                selected = "team"
+              ),
+              
+              selectInput(
+                "plot_average_group",
+                "Average Across:",
+                choices = categorical_choices,
+                selected = "team"
+              ),
+              
+              hr(),
+              
+              h4("Histogram"),
+              plotOutput("histogram_plot"),
+              
+              br(),
+              
+              h4("Box Plot"),
+              plotOutput("boxplot_plot"),
+              
+              br(),
+              
+              h4("Scatter Plot"),
+              plotOutput("scatter_plot"),
+              
+              br(),
+              
+              h4("Faceted Histogram"),
+              plotOutput("facet_plot"),
+              
+              br(),
+              
+              h4("Average by Category"),
+              plotOutput("average_plot"),
+              
+              br(),
+              
+              h4("Category Comparison"),
+              plotOutput("bar_plot"),
+              
+              br(),
+              
+              h4("Heatmap"),
+              plotOutput("heatmap_plot")
+            )
+          )
         )
       )
     )
@@ -321,11 +441,7 @@ server <- function(input, output, session) {
     data <- data |>
       filter(
         .data[[input$numeric_var1]] >= input$numeric_range1[1],
-        .data[[input$numeric_var1]] <= input$numeric_range1[2]
-      )
-    
-    data <- data |>
-      filter(
+        .data[[input$numeric_var1]] <= input$numeric_range1[2],
         .data[[input$numeric_var2]] >= input$numeric_range2[1],
         .data[[input$numeric_var2]] <= input$numeric_range2[2]
       )
@@ -354,7 +470,6 @@ server <- function(input, output, session) {
     },
     
     content = function(file) {
-      
       write.csv(
         filtered_data(),
         file,
@@ -369,32 +484,39 @@ server <- function(input, output, session) {
     
     data <- filtered_data()
     
-    var1 <- data[[input$numeric_var1]]
-    var2 <- data[[input$numeric_var2]]
-    
-    summary_table <- tibble(
-      Variable = c(input$numeric_var1, input$numeric_var2),
-      Mean = c(
-        mean(var1, na.rm = TRUE),
-        mean(var2, na.rm = TRUE)
-      ),
-      Median = c(
-        median(var1, na.rm = TRUE),
-        median(var2, na.rm = TRUE)
-      ),
-      SD = c(
-        sd(var1, na.rm = TRUE),
-        sd(var2, na.rm = TRUE)
-      ),
-      Min = c(
-        min(var1, na.rm = TRUE),
-        min(var2, na.rm = TRUE)
-      ),
-      Max = c(
-        max(var1, na.rm = TRUE),
-        max(var2, na.rm = TRUE)
+    validate(
+      need(
+        nrow(data) > 0,
+        "No observations match the current filters."
       )
-    ) |>
+    )
+    
+    data |>
+      group_by(.data[[input$summary_group]]) |>
+      summarize(
+        Count = sum(!is.na(.data[[input$summary_numeric]])),
+        Mean = mean(
+          .data[[input$summary_numeric]],
+          na.rm = TRUE
+        ),
+        Median = median(
+          .data[[input$summary_numeric]],
+          na.rm = TRUE
+        ),
+        SD = sd(
+          .data[[input$summary_numeric]],
+          na.rm = TRUE
+        ),
+        Min = min(
+          .data[[input$summary_numeric]],
+          na.rm = TRUE
+        ),
+        Max = max(
+          .data[[input$summary_numeric]],
+          na.rm = TRUE
+        ),
+        .groups = "drop"
+      ) |>
       mutate(
         across(
           where(is.numeric),
@@ -402,18 +524,28 @@ server <- function(input, output, session) {
         )
       )
     
-    summary_table
-    
   }, options = list(
-    dom = "t"
+    pageLength = 10
   ), rownames = FALSE)
   
   
   # One-way contingency table
   output$one_way_table <- DT::renderDataTable({
     
-    filtered_data() |>
-      count(team, name = "Count") |>
+    data <- filtered_data()
+    
+    validate(
+      need(
+        nrow(data) > 0,
+        "No observations match the current filters."
+      )
+    )
+    
+    data |>
+      count(
+        .data[[input$one_way_var]],
+        name = "Count"
+      ) |>
       arrange(desc(Count))
     
   }, options = list(
@@ -424,16 +556,33 @@ server <- function(input, output, session) {
   # Two-way contingency table
   output$two_way_table <- DT::renderDataTable({
     
-    filtered_data() |>
-      count(team, location) |>
+    data <- filtered_data()
+    
+    validate(
+      need(
+        nrow(data) > 0,
+        "No observations match the current filters."
+      ),
+      need(
+        input$two_way_var1 != input$two_way_var2,
+        "Choose two different categorical variables."
+      )
+    )
+    
+    data |>
+      count(
+        .data[[input$two_way_var1]],
+        .data[[input$two_way_var2]]
+      ) |>
       pivot_wider(
-        names_from = location,
+        names_from = all_of(input$two_way_var2),
         values_from = n,
         values_fill = 0
       )
     
   }, options = list(
-    pageLength = 10
+    pageLength = 10,
+    scrollX = TRUE
   ), rownames = FALSE)
   
   
@@ -442,9 +591,20 @@ server <- function(input, output, session) {
     
     data <- filtered_data()
     
+    validate(
+      need(
+        nrow(data) > 0,
+        "No observations match the current filters."
+      )
+    )
+    
+    numeric1_label <- get_label(input$plot_numeric1)
+    
     ggplot(
       data,
-      aes(x = .data[[input$numeric_var1]])
+      aes(
+        x = .data[[input$plot_numeric1]]
+      )
     ) +
       geom_histogram(
         bins = 30,
@@ -453,65 +613,97 @@ server <- function(input, output, session) {
       labs(
         title = paste(
           "Distribution of",
-          input$numeric_var1
+          numeric1_label
         ),
-        x = input$numeric_var1,
+        x = numeric1_label,
         y = "Frequency"
       ) +
       theme_minimal()
   })
   
   
-  # Boxplot
+  # Box plot
   output$boxplot_plot <- renderPlot({
     
     data <- filtered_data()
     
+    validate(
+      need(
+        nrow(data) > 0,
+        "No observations match the current filters."
+      )
+    )
+    
+    numeric1_label <- get_label(input$plot_numeric1)
+    group_label <- get_label(input$plot_group)
+    
     ggplot(
       data,
       aes(
-        x = location,
-        y = .data[[input$numeric_var1]],
-        fill = location
+        x = .data[[input$plot_group]],
+        y = .data[[input$plot_numeric1]],
+        fill = .data[[input$plot_group]]
       )
     ) +
       geom_boxplot() +
       labs(
         title = paste(
-          input$numeric_var1,
-          "by Game Location"
+          numeric1_label,
+          "by",
+          group_label
         ),
-        x = "Game Location",
-        y = input$numeric_var1,
-        fill = "Location"
+        x = group_label,
+        y = numeric1_label,
+        fill = group_label
       ) +
-      theme_minimal()
+      theme_minimal() +
+      theme(
+        axis.text.x = element_text(
+          angle = 45,
+          hjust = 1
+        )
+      )
   })
   
   
-  # Scatterplot
+  # Scatter plot
   output$scatter_plot <- renderPlot({
     
     data <- filtered_data()
     
+    validate(
+      need(
+        nrow(data) > 0,
+        "No observations match the current filters."
+      ),
+      need(
+        input$plot_numeric1 != input$plot_numeric2,
+        "Choose two different numeric variables for the scatter plot."
+      )
+    )
+    
+    numeric1_label <- get_label(input$plot_numeric1)
+    numeric2_label <- get_label(input$plot_numeric2)
+    group_label <- get_label(input$plot_group)
+    
     ggplot(
       data,
       aes(
-        x = .data[[input$numeric_var1]],
-        y = .data[[input$numeric_var2]],
-        color = location
+        x = .data[[input$plot_numeric1]],
+        y = .data[[input$plot_numeric2]],
+        color = .data[[input$plot_group]]
       )
     ) +
       geom_point(alpha = 0.5) +
       labs(
         title = paste(
-          input$numeric_var1,
+          numeric1_label,
           "vs",
-          input$numeric_var2
+          numeric2_label
         ),
-        x = input$numeric_var1,
-        y = input$numeric_var2,
-        color = "Location"
+        x = numeric1_label,
+        y = numeric2_label,
+        color = group_label
       ) +
       theme_minimal()
   })
@@ -522,46 +714,79 @@ server <- function(input, output, session) {
     
     data <- filtered_data()
     
+    validate(
+      need(
+        nrow(data) > 0,
+        "No observations match the current filters."
+      )
+    )
+    
+    numeric1_label <- get_label(input$plot_numeric1)
+    facet_label <- get_label(input$plot_facet)
+    
     ggplot(
       data,
-      aes(x = .data[[input$numeric_var1]])
+      aes(
+        x = .data[[input$plot_numeric1]]
+      )
     ) +
       geom_histogram(
         bins = 30,
         color = "white"
       ) +
-      facet_wrap(~ location) +
+      facet_wrap(
+        vars(
+          .data[[input$plot_facet]]
+        )
+      ) +
       labs(
         title = paste(
           "Distribution of",
-          input$numeric_var1,
-          "by Game Location"
+          numeric1_label,
+          "by",
+          facet_label
         ),
-        x = input$numeric_var1,
+        x = numeric1_label,
         y = "Frequency"
       ) +
       theme_minimal()
   })
   
   
-  # Team average plot
-  output$team_plot <- renderPlot({
+  # Average by category
+  output$average_plot <- renderPlot({
     
-    data <- filtered_data() |>
-      group_by(team) |>
+    data <- filtered_data()
+    
+    validate(
+      need(
+        nrow(data) > 0,
+        "No observations match the current filters."
+      )
+    )
+    
+    numeric1_label <- get_label(input$plot_numeric1)
+    average_group_label <- get_label(input$plot_average_group)
+    
+    plot_data <- data |>
+      group_by(
+        .data[[input$plot_average_group]]
+      ) |>
       summarize(
         average = mean(
-          .data[[input$numeric_var1]],
+          .data[[input$plot_numeric1]],
           na.rm = TRUE
         ),
         .groups = "drop"
-      ) |>
-      arrange(average)
+      )
     
     ggplot(
-      data,
+      plot_data,
       aes(
-        x = reorder(team, average),
+        x = reorder(
+          .data[[input$plot_average_group]],
+          average
+        ),
         y = average
       )
     ) +
@@ -570,16 +795,132 @@ server <- function(input, output, session) {
       labs(
         title = paste(
           "Average",
-          input$numeric_var1,
-          "by Team"
+          numeric1_label,
+          "by",
+          average_group_label
         ),
-        x = "Team",
+        x = average_group_label,
         y = paste(
           "Average",
-          input$numeric_var1
+          numeric1_label
         )
       ) +
       theme_minimal()
+  })
+  
+  
+  # Side-by-side bar chart
+  output$bar_plot <- renderPlot({
+    
+    data <- filtered_data()
+    
+    validate(
+      need(
+        nrow(data) > 0,
+        "No observations match the current filters."
+      ),
+      need(
+        input$plot_group != input$plot_facet,
+        "Choose different variables for Color / Group and Facet."
+      )
+    )
+    
+    group_label <- get_label(input$plot_group)
+    facet_label <- get_label(input$plot_facet)
+    
+    plot_data <- data |>
+      count(
+        .data[[input$plot_group]],
+        .data[[input$plot_facet]]
+      )
+    
+    ggplot(
+      plot_data,
+      aes(
+        x = .data[[input$plot_group]],
+        y = n,
+        fill = .data[[input$plot_facet]]
+      )
+    ) +
+      geom_col(
+        position = "dodge"
+      ) +
+      labs(
+        title = paste(
+          group_label,
+          "by",
+          facet_label
+        ),
+        x = group_label,
+        y = "Count",
+        fill = facet_label
+      ) +
+      theme_minimal() +
+      theme(
+        axis.text.x = element_text(
+          angle = 45,
+          hjust = 1
+        )
+      )
+  })
+  
+  
+  # Heatmap
+  output$heatmap_plot <- renderPlot({
+    
+    data <- filtered_data()
+    
+    validate(
+      need(
+        nrow(data) > 0,
+        "No observations match the current filters."
+      )
+    )
+    
+    numeric1_label <- get_label(input$plot_numeric1)
+    
+    heatmap_data <- data |>
+      group_by(
+        team,
+        opponent
+      ) |>
+      summarize(
+        average = mean(
+          .data[[input$plot_numeric1]],
+          na.rm = TRUE
+        ),
+        .groups = "drop"
+      )
+    
+    ggplot(
+      heatmap_data,
+      aes(
+        x = opponent,
+        y = team,
+        fill = average
+      )
+    ) +
+      geom_tile() +
+      labs(
+        title = paste(
+          "Average",
+          numeric1_label,
+          "by Team and Opponent"
+        ),
+        x = "Opponent",
+        y = "Team",
+        fill = paste(
+          "Average",
+          numeric1_label
+        )
+      ) +
+      theme_minimal() +
+      theme(
+        axis.text.x = element_text(
+          angle = 45,
+          hjust = 1
+        )
+      )
   })
 }
 

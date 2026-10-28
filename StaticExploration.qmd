@@ -82,18 +82,33 @@ team_summary
 
 ## Graphical Summaries
 
-### Average Points By team
+### Average Points By team and Game Location
 
-This bar chart compares the average number of points scored per player-game observation across NBA teams.
+This bar chart compares the average number of points scored per player-game observation across NBA teams for home and away games.
 
 ```{r}
-ggplot(team_summary, aes(x = reorder(team, mean_pts), y = mean_pts)) +
-  geom_col() +
+team_location_summary <- nba |>
+  group_by(team, location) |>
+  summarize(
+    mean_pts = mean(pts, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+ggplot(
+  team_location_summary,
+  aes(
+    x = reorder(team, mean_pts),
+    y = mean_pts,
+    fill = location
+  )
+) +
+  geom_col(position = "dodge") +
   coord_flip() +
   labs(
-    title = "Average Player Points per Game by NBA Team",
+    title = "Average Player Points by NBA Team and Game Location",
     x = "Team",
-    y = "Average Points"
+    y = "Average Points",
+    fill = "Game Location"
   ) +
   theme_minimal()
 ```
